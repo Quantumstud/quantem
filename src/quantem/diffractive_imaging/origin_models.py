@@ -179,7 +179,7 @@ class CenterOfMassOriginModel(AutoSerialize):
                 eigenvectors = torch.linalg.eigh(covariance_matrix.cpu())[1].to(points.device)
 
                 # The normal vector to the plane is the eigenvector corresponding to the smallest eigenvalue
-                normal_vector = eigenvectors[:, 0]
+                normal_vector = eigenvectors[:, 0].contiguous()
                 a, b, c = normal_vector
 
                 # Calculate d using the centroid: d = -(ax_c + by_c + cz_c)
@@ -193,10 +193,10 @@ class CenterOfMassOriginModel(AutoSerialize):
             ay, by, cy, dy = fit_linear_plane(com_y_pts)
 
             com_fitted_x = (
-                probe_positions @ torch.tensor([-ax, -bx], device=self.device) - dx
+                -probe_positions[:, 0] * ax - probe_positions[:, 1] * bx - dx
             ) / cx
             com_fitted_y = (
-                probe_positions @ torch.tensor([-ay, -by], device=self.device) - dy
+                -probe_positions[:, 0] * ay - probe_positions[:, 1] * by - dy
             ) / cy
             com_fitted = torch.stack([com_fitted_x, com_fitted_y], -1)
 
